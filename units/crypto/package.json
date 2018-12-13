@@ -1,0 +1,21 @@
+{
+  "name": "@unitverse/crypto",
+  "version": "0.1.0",
+  "description": "> TODO: description",
+  "author": "Jeffrey Spies <code@jeffspies.com>",
+  "homepage": "https://github.com/jeffspies/unitverse/tree/master/units/unit-tasks#readme",
+  "license": "MIT",
+  "main": "index.js",
+  "directories": {
+    "test": "__tests__"
+  },
+  "files": [],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+  }
+}
