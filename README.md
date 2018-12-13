@@ -1,5 +1,13 @@
 # Unitverse
 
+## Not on NPM yet, however...
+```
+npm -g lerna
+git clone https://github.com/221B-io/unitverse
+lerna link
+
+
+
 ## Getting Started
 ```
 const Engine = require('unitverse');

@@ -1,9 +1,9 @@
 {
   "name": "@unitverse/tasks",
   "version": "0.1.0",
-  "description": "> TODO: description",
+  "description": "Run tasks in sync or async",
   "author": "Jeffrey Spies <code@jeffspies.com>",
-  "homepage": "https://github.com/jeffspies/unitverse/tree/master/units/unit-tasks#readme",
+  "homepage": "https://github.com/221b-io/unitverse/tree/master/units/unit-tasks#readme",
   "license": "MIT",
   "main": "tasks.js",
   "directories": {

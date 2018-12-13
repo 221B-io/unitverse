@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "> TODO: description",
   "author": "Jeffrey Spies <code@jeffspies.com>",
-  "homepage": "https://github.com/jeffspies/unitverse/tree/master/units/file#readme",
+  "homepage": "https://github.com/221b-io/unitverse/tree/master/units/file#readme",
   "license": "MIT",
   "main": "lib/file.js",
   "directories": {
