@@ -4,7 +4,19 @@
 ```
 npm -g lerna
 git clone https://github.com/221B-io/unitverse
-lerna link
+npm run bootstrap
+npm run link
+cd ..
+mkdir test-unitverse && cd test-unitverse
+npm init
+npm i @unitverse/core @unitverse/tasks @unitverse/crypto
+touch index.js
+```
+
+Copy and paste some of the code below into index.js and run
+
+```
+node index.js
 ```
 
 ## Getting Started

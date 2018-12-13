@@ -9,8 +9,7 @@
   "directories": {
     "test": "__tests__"
   },
-  "files": [
-  ],
+  "files": [],
   "publishConfig": {
     "access": "public"
   },
