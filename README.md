@@ -9,7 +9,7 @@ npm run link
 cd ..
 mkdir test-unitverse && cd test-unitverse
 npm init
-npm i @unitverse/core @unitverse/tasks @unitverse/crypto
+npm link @unitverse/core @unitverse/tasks @unitverse/crypto
 touch index.js
 ```
 
