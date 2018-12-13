@@ -12,8 +12,8 @@ lerna link
 const Engine = require('unitverse');
 const engine = new Engine();
 
-engine.register('tasks', '0.1.0', require('./units/tasks'));
-engine.register('hash', '0.1.0', require('./units/hash'));
+engine.register('tasks', '0.1.0', require('@unitverse/tasks/tasks'));
+engine.register('hash', '0.1.0', require('@unitverse/crypto/hash'));
 
 engine.run('tasks', {
   tasks: [{
