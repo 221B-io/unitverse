@@ -23,20 +23,51 @@ const validateCommand = {
     },
   },
   command: (input, cb) => {
-    cb(null, true);
+    cb(null, input.a);
+  },
+}
+
+const validateCommandWithDefaults = {
+  jsonSchema: {
+    properties: {
+      a: { 
+        type: 'string', 
+        default: 'the_default_value',
+      },
+    },
+  },
+  command: (input, cb) => {
+    cb(null, input.a);
   },
 }
 
 engine.register('callbackCommand', '0.1.0', callbackCommand);
 engine.register('promiseCommand', '0.1.0', promiseCommand);
 engine.register('validateCommand', '0.1.0', validateCommand);
+engine.register('validateCommandWithDefaults', '0.1.0', validateCommandWithDefaults);
 
 describe('Validate', () => {
   test('validate', () => {
     engine.run('validateCommand', {
+      a: '1',
+    }, (err, result) => {
+      expect(result).toBe('1');
+    });
+  });
+
+  test('validate error', () => {
+    engine.run('validateCommand', {
       a: 1,
     }, (err, result) => {
       expect(err).not.toBeNull();
+    });
+  });
+
+  test('validate with a default value', () => {
+    engine.run('validateCommandWithDefaults', {
+    }, (err, result) => {
+      expect(err).toBeNull();
+      expect(result).toBe('the_default_value');
     });
   });
 })

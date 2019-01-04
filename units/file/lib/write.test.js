@@ -3,5 +3,7 @@
 const file = require('..');
 
 describe('@unitverse/file', () => {
-    it('needs tests');
+    it('needs tests', () => {
+        
+    });
 });

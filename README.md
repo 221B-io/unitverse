@@ -9,7 +9,7 @@ npm run link
 cd ..
 mkdir test-unitverse && cd test-unitverse
 npm init
-npm link @unitverse/core @unitverse/tasks @unitverse/crypto
+npm link @unitverse/core @unitverse/collections @unitverse/crypto
 touch index.js
 ```
 
@@ -24,10 +24,10 @@ node index.js
 const Engine = require('unitverse');
 const engine = new Engine();
 
-engine.register('tasks', '0.1.0', require('@unitverse/tasks/tasks'));
+engine.register('queue', '0.1.0', require('@unitverse/collections/queue'));
 engine.register('hash', '0.1.0', require('@unitverse/crypto/hash'));
 
-engine.run('tasks', {
+engine.run('queue', {
   tasks: [{
     'hash': {
       path: 'touch.txt',

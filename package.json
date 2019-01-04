@@ -2,11 +2,13 @@
   "name": "root",
   "private": true,
   "devDependencies": {
+    "jest": "^24.0.0-alpha.9",
     "lerna": "^3.5.0"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "clean": "lerna clean",
-    "link": "find core units -d 1 -execdir sh -c 'cd {} && npm link' \\;"
+    "link": "find core units -d 1 -execdir sh -c 'cd {} && npm link' \\;",
+    "test": "./node_modules/.bin/jest"
   }
 }

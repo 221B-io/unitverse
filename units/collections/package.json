@@ -1,15 +1,18 @@
 {
-  "name": "@unitverse/tasks",
+  "name": "@unitverse/collections",
   "version": "0.1.0",
-  "description": "Run tasks in sync or async",
+  "description": "Dealing with collections",
   "author": "Jeffrey Spies <code@jeffspies.com>",
-  "homepage": "https://github.com/221b-io/unitverse/tree/master/units/unit-tasks#readme",
+  "homepage": "https://github.com/221b-io/unitverse/tree/master/units/file#readme",
   "license": "MIT",
-  "main": "tasks.js",
+  "main": "lib/index.js",
   "directories": {
+    "lib": "lib",
     "test": "__tests__"
   },
-  "files": [],
+  "files": [
+    "lib"
+  ],
   "publishConfig": {
     "access": "public"
   },

@@ -78,7 +78,6 @@ class Engine {
 
   getSchema( name ) {
     const latestCommand = this.commandRegistry.getLatest(name);
-    console.log(latestCommand);
     if( latestCommand.jsonSchema !== undefined ) {
       return latestCommand.jsonSchema;
     }
@@ -86,31 +85,38 @@ class Engine {
 
   run(name, input, callback) {
     let error = null;
-    const latestCommand = this.commandRegistry.getLatest(name);
     let validateFunction = () => { return true; }
-    if( latestCommand.validate === undefined ) {
-      const version = this.commandRegistry.getLatestVersion(name);
-      if( latestCommand.jsonSchema !== undefined ) {
-        validateFunction = this.validator.compile(latestCommand.jsonSchema);
-        // Adding a validate version as cache
-        this.commandRegistry.data[name][version].validate = validateFunction;
-      }
-    } else {
-      validateFunction = latestCommand.validate;
+
+    const latestCommand = this.commandRegistry.getLatest(name);
+    if(latestCommand === undefined) {
+      error = new Error(`Unit ${name} may not be registered`);
     }
 
-    if( this.config.validate && !validateFunction(input) ) {
-      // this.validator.errorsText()
-      error = new Error('Validation Error');
-    }
-    
-    if(!_.isPlainObject(input)) {
+    if( !error && !_.isPlainObject(input)) {
       if(latestCommand.argument === undefined) {
         error = new Error('input is not an object and argument is not defined');
       }
       const newInput = {};
       newInput[latestCommand.argument] = input;
       input = newInput;
+    }
+
+    if( !error ) {
+      if( latestCommand.validate === undefined ) {
+        const version = this.commandRegistry.getLatestVersion(name);
+        if( latestCommand.jsonSchema !== undefined ) {
+          validateFunction = this.validator.compile(latestCommand.jsonSchema);
+          // Adding a validate version as cache
+          this.commandRegistry.data[name][version].validate = validateFunction;
+        }
+      } else {
+        validateFunction = latestCommand.validate;
+      }
+    }
+    
+    if( !error && this.config.validate && !validateFunction(input) ) {
+      // this.validator.errorsText()
+      error = new Error('Validation Error');
     }
 
     const expectsPromise = !this.isCallback(callback);

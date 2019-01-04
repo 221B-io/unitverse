@@ -1,6 +1,6 @@
 const fse = require('fse');
 
-module.export = {
+module.exports = {
   jsonSchema: {
     properties: {
       source: {

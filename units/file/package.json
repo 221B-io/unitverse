@@ -18,5 +18,9 @@
   },
   "scripts": {
     "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+    "flatted": "^2.0.0",
+    "fse": "^4.0.1"
   }
 }
