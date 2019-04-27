@@ -27,7 +27,7 @@ const validateCommand = {
   },
 }
 
-const validateCommandWithDefaults = {
+const validateCommandWithDefaults = { 
   jsonSchema: {
     properties: {
       a: { 
@@ -41,10 +41,10 @@ const validateCommandWithDefaults = {
   },
 }
 
-engine.register('callbackCommand', '0.1.0', callbackCommand);
-engine.register('promiseCommand', '0.1.0', promiseCommand);
-engine.register('validateCommand', '0.1.0', validateCommand);
-engine.register('validateCommandWithDefaults', '0.1.0', validateCommandWithDefaults);
+engine.register('callbackCommand@0.1.0', callbackCommand);
+engine.register('promiseCommand@0.1.0', promiseCommand);
+engine.register('validateCommand@0.1.0', validateCommand);
+engine.register('validateCommandWithDefaults@0.1.0', validateCommandWithDefaults);
 
 describe('Validate', () => {
   test('validate', () => {

@@ -24,8 +24,8 @@ node index.js
 const Engine = require('unitverse');
 const engine = new Engine();
 
-engine.register('queue', '0.1.0', require('@unitverse/collections/queue'));
-engine.register('hash', '0.1.0', require('@unitverse/crypto/hash'));
+engine.register('queue@0.1.0', require('@unitverse/collections/queue'));
+engine.register('hash@0.1.0', require('@unitverse/crypto/hash'));
 
 engine.run('queue', {
   tasks: [{

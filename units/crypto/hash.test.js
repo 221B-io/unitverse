@@ -3,7 +3,7 @@ const hash = require('./hash');
 
 const engine = new Engine();
 
-engine.register('hash', '0.1.0', hash);
+engine.register('hash@0.1.0', hash);
 
 describe('Hash', () => {
   test('hash', () => {

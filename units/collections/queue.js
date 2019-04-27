@@ -2,7 +2,6 @@
 
 const _ = require('lodash');
 const async = require('async');
-const pino = require('pino');
 
 const templateOptions = { 
   interpolate: /\${([\s\S]+?)}/g, // ${variable}
@@ -48,12 +47,6 @@ const command = (input, cb, engine) => {
     queue.push((cb) => cb(null, {}));
   }
 
-  // Handle logger
-  let logger = null;
-  if(input.log) {
-    logger = pino({ prettyPrint: { colorize: true } });
-  }
-
   // Compiled validation schema registry
   const schemas = {};
 
@@ -73,14 +66,6 @@ const command = (input, cb, engine) => {
         });
 
         engine.run(commandType, command, (err, output) => {
-          if(input.log) {
-            logger.info({
-              parallel: input.parallel,
-              type: commandType,
-              input: command,
-              output: output,
-            });
-          }
           cb(err, {
             previous: {
               command: commandType,

@@ -5,7 +5,7 @@
   "author": "Jeffrey Spies <code@jeffspies.com>",
   "homepage": "https://github.com/221b-io/unitverse/tree/master/core/core#readme",
   "license": "MIT",
-  "main": "lib/core.js",
+  "main": "index.js",
   "directories": {
     "lib": "lib",
     "test": "__tests__"
@@ -18,5 +18,10 @@
   },
   "scripts": {
     "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+    "npm-package-arg": "^6.1.0",
+    "pino": "^5.10.6",
+    "pino-pretty": "^2.5.0"
   }
 }
