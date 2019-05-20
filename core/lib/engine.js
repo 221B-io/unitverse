@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const npa = require('npm-package-arg');
 const pino = require('pino');
+const pIsPromise = require('p-is-promise');
 
 const VersionedObject = require('./versionedobject');
 const JSONSchemaValidator = require('./jsonschemavalidator');
@@ -53,10 +54,6 @@ class Engine {
     return callback !== undefined && typeof callback === 'function';
   }
 
-  isPromise( result ) {
-    return result !== undefined && result.then !== undefined && typeof result.then === 'function';
-  }
-
   getSchema( name ) {
     const latestCommand = this.commandRegistry.getLatest(name);
     if( latestCommand.jsonSchema !== undefined ) {
@@ -78,7 +75,7 @@ class Engine {
   expectedCallback(callback, command, input) {
     const calledCommand = command.command(input, callback, this);
     // Check to see if the function is a promise
-    if(this.isPromise(calledCommand)) {
+    if(this.pIsPromise(calledCommand)) {
       calledCommand.then((result) => {
         this.log({
           type: command.type,
@@ -108,7 +105,7 @@ class Engine {
         });
         resolve(result);
       }, this);
-      if(this.isPromise(calledCommand)) {
+      if(this.pIsPromise(calledCommand)) {
         calledCommand.then((result) => {
           resolve(result);
         }).catch((error) => {
@@ -119,7 +116,23 @@ class Engine {
     });
   }
 
-  run(name, input, callback) {
+  runWithValidation(name, input, callback) {
+    // TODO
+    if ( command.validate !== undefined ) {
+      return self.run(name, input, options, callback);
+    }
+    return this.composeError(callback,
+      new Error(`Unit ${name} has no validation function`));
+  }
+
+  runWithoutValidation(name, input, callback) {
+    // TODO
+    return self.run(name, input, options, callback);
+  }
+
+  run(name, input, options, callback) {
+    // run('someunit', {x: 1, y: 1}, {validate: true})
+    // run({ name: 'someunit', input: {x: 1, y:1}, options: {validate: true}})
     let validateFunction = () => { return true; }
 
     const command = this.commandRegistry.getLatest(name);
