@@ -11,5 +11,8 @@
     "link": "find core units -d 1 -execdir sh -c 'cd {} && npm link' \\;",
     "test": "./node_modules/.bin/jest"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "jest": {
+    "testEnvironment": "node"
+  }
 }

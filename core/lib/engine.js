@@ -2,6 +2,7 @@ const _ = require('lodash');
 const npa = require('npm-package-arg');
 const pino = require('pino');
 const pIsPromise = require('p-is-promise');
+const async = require('async');
 
 const VersionedObject = require('./versionedobject');
 const JSONSchemaValidator = require('./jsonschemavalidator');
@@ -9,175 +10,151 @@ const JSONSchemaValidator = require('./jsonschemavalidator');
 class Engine {
   constructor(config) {
     this.config = _.defaults(config, {
-      validate: true,
+      validateInput: true,
+      useDefaults: true,
       compileValidationOnRegistration: false,
       log: false,
     });
-    this.commandRegistry = new VersionedObject();
-    this.validator = new JSONSchemaValidator();
-    
-    // Handle logger
-    this.logger = null;
-    if(this.config.log) {
-      this.logger = pino({ prettyPrint: { colorize: true } });
-    }
+
+    this.validators = new VersionedObject();
+    this.validators.setVersion(
+      'jsonSchema', 
+      '0.1.0', 
+      new JSONSchemaValidator(_.pick(this.config, ['useDefaults']))
+    );
+
+    this.registry = {};
+
+    this.logger = pino({ prettyPrint: { colorize: true } });
   }
 
-  log(message) {
+  log(message, level) {
     if(this.config.log) {
+      // level = _.defaultTo(level, 'info');
+      // const levels = {
+      //   trace: this.logger.trace,
+      //   debug: this.logger.debug,
+      //   info: this.logger.info,
+      //   warn: this.logger.warn,
+      //   error: this.logger.error,
+      //   fatal: this.logger.fatal,
+      // };
+      // if(!_.has(levels, level)) {
+      //   throw Error('Invalid log level');
+      // }
+      // levels[level](message);      
       this.logger.info(message);
     }
   }
 
-  // compile(name, version, jsonCommand) {
-  //   _.each(jsonCommand.register, (value, key) => {
-  //     this.register(key, value);
-  //   });
-  //   const command = this.commandRegistry.getLatest(jsonCommand.command.type);
-  //   if(command === undefined) {
-  //     assert new Error(`Unit ${name} may not be registered`);
-  //   }
-  //   return (input, cb) => {
-  //     return 
-  //   };
-  // }
+  callbackify(command, input, callback) {
+    let callbackWasRun = false;
 
-  register(name, command) {
-    const parsed = npa(name);
-    // if(_.isPlainObject(command.command)){
-
-    // }
-    this.commandRegistry.setVersion(parsed.name, parsed.rawSpec, command);
-  }
-
-  isCallback( callback ) {
-    return callback !== undefined && typeof callback === 'function';
-  }
-
-  getSchema( name ) {
-    const latestCommand = this.commandRegistry.getLatest(name);
-    if( latestCommand.jsonSchema !== undefined ) {
-      return latestCommand.jsonSchema;
-    }
-  }
-
-  composeError(callback, error) {
-    const expectsPromise = !this.isCallback(callback);
-    if( expectsPromise ) {
-      return new Promise((resolve, reject) => {
-        reject(error);
-      });
-    } 
-    callback(error, null);
-    return;
-  }
-
-  expectedCallback(callback, command, input) {
-    const calledCommand = command.command(input, callback, this);
-    // Check to see if the function is a promise
-    if(this.pIsPromise(calledCommand)) {
-      calledCommand.then((result) => {
+    const composedCallback = (err, result) => {
+      callbackWasRun = true;
+      if ( !err ) {
         this.log({
           type: command.type,
           input: input,
           output: result,
-        });
-        callback(null, result);
-      }).catch((error) => {
-        callback(error, null);
-      });
-    }
-    return;
-  }
-
-  expectedPromise(command, input) {
-    return new Promise((resolve, reject) => {
-      // so we're using resolve as our callback
-      // but we need to figure out if the function we're calling was a promise
-      const calledCommand = command.command(input, (err, result) => {
-        if ( err !== null ) {
-          reject(err);
-        }
-        this.log({
-          type: command.type,
-          input: input,
-          output: result,
-        });
-        resolve(result);
-      }, this);
-      if(this.pIsPromise(calledCommand)) {
-        calledCommand.then((result) => {
-          resolve(result);
-        }).catch((error) => {
-          reject(error);
         });
       }
+      callback(err, result);
+    }
+
+    const calledCommand = command(input, composedCallback);
+    if( callbackWasRun )
       return;
-    });
-  }
-
-  runWithValidation(name, input, callback) {
-    // TODO
-    if ( command.validate !== undefined ) {
-      return self.run(name, input, options, callback);
-    }
-    return this.composeError(callback,
-      new Error(`Unit ${name} has no validation function`));
-  }
-
-  runWithoutValidation(name, input, callback) {
-    // TODO
-    return self.run(name, input, options, callback);
-  }
-
-  run(name, input, options, callback) {
-    // run('someunit', {x: 1, y: 1}, {validate: true})
-    // run({ name: 'someunit', input: {x: 1, y:1}, options: {validate: true}})
-    let validateFunction = () => { return true; }
-
-    const command = this.commandRegistry.getLatest(name);
-    if(command === undefined) {
-      return this.composeError(callback, 
-        new Error(`Unit ${name} may not be registered`));
-    }
-
-    command.type = name;
-
-    if( !_.isPlainObject(input)) {
-      if(command.argument === undefined) {
-        return this.composeError(callback, 
-          new Error('input is not an object and argument is not defined'));
-      }
-      const newInput = {};
-      newInput[command.argument] = input;
-      input = newInput;
-    }
-
-    if( command.validate === undefined ) {
-      const version = this.commandRegistry.getLatestVersion(name);
-      if( command.jsonSchema !== undefined ) {
-        validateFunction = this.validator.compile(command.jsonSchema);
-        // Adding a validate version as cache
-        this.commandRegistry.data[name][version].validate = validateFunction;
-      }
+    
+    if(pIsPromise(calledCommand)) {
+      calledCommand.then((result) => {
+        return composedCallback(null, result);
+      }).catch((error) => {
+        return composedCallback(error, null);
+      });
     } else {
-      validateFunction = command.validate;
+      return composedCallback(null, calledCommand);
+    }
+    return;
+  }
+
+  compileOne(unit) {
+    let command = null;
+    let inputValidationFunction = undefined;
+    
+    if(_.isPlainObject(unit)) {
+      command = unit.command;
+      if( unit.jsonSchema !== undefined) {
+        const validator = this.validators.getLatest('jsonSchema');
+        inputValidationFunction = validator.compile( unit.jsonSchema );
+      }
+    } else if (_.isFunction(unit) ){
+      command = unit;
+    } else {
+      throw Error(`Unit is not of proper form`);
+    }
+
+    return (input, cb) => {
+      // const options = _.defaults(options, this.config);
+      const options = this.config;
+      if( options.validateInput 
+          && inputValidationFunction !== undefined ) {
+        const validationObject =  inputValidationFunction ( input, options.useDefaults );
+        if ( !validationObject.isValid ) {
+          return cb(validationObject.errors, null);
+        }
+        if( this.config.useDefaults === true) {
+          input = validationObject.data;
+        }
+      }
+      // return the callback version of the command
+      this.callbackify(command, input, cb);
+    };
+  }
+
+  compile( units, registry ) {
+    if(_.isPlainObject(units) && _.has(units, 'command')) {
+      if(_.isFunction(units.command)) {
+        return this.compileOne(units.command);
+      }
+
+      const registry = {};
+      if( _.has(units, 'register')) {
+        _.forEach(units.register, (value, key) => {
+          registry[key] = this.compile(value);
+        });
+      }
+      if(_.isString(units.command) ){
+        return this.compile(units.command, registry);
+      }
+      if(_.isArray(units.command) ) {
+        return this.compile(units.command, registry);
+      }
+      return;  
+    }
+
+    if ( _.isArray(units) ) {
+      const compiledArray = _.map(units, (unit) => {
+        return this.compile(unit, registry);
+      });
+      
+      if( compiledArray.length === 1) {
+        return compiledArray[0];
+      }
+
+      return (input, callback) => {
+        compiledArray.unshift((cb) => {
+          cb(null, input);
+        });
+        return async.waterfall(compiledArray, callback);
+      };
     }
     
-    if( this.config.validate && !validateFunction(input) ) {
-      // this.validator.errorsText()
-      return this.composeError(callback, 
-        new Error('Validation Error'));
+    if ( _.isString(units) ) {
+      return registry[units];
     }
 
-    // How do we return the error or result
-    const expectsPromise = !this.isCallback(callback);
-    // Called without a callback, so we're returning a promise
-    if( expectsPromise ) {
-      return this.expectedPromise(command, input);
-    } 
-    // Called with a callback
-    return this.expectedCallback(callback, command, input);
+    return;
   }
 }
 

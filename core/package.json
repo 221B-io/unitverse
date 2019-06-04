@@ -20,8 +20,12 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "npm-package-arg": "^6.1.0",
+    "async": "^3.0.1",
+    "p-is-promise": "^2.1.0",
     "pino": "^5.10.6",
     "pino-pretty": "^2.5.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }

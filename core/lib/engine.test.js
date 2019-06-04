@@ -1,20 +1,26 @@
 const Engine = require('./engine');
 
-const engine = new Engine();
+const engine = new Engine({log: false});
 
 const callbackCommand = {
   command: (input, cb) => {
-    cb(null, true);
-  }
-}
+    cb(null, input);
+  },
+};
 
 const promiseCommand = {
   command: (input) => {
     return new Promise((resolve, reject) => {
-      resolve(true);
+      resolve(input);
     });
-  }
-}
+  },
+};
+
+const valueCommand = {
+  command: (input) => {
+    return input;
+  },
+};
 
 const validateCommand = {
   jsonSchema: {
@@ -41,59 +47,111 @@ const validateCommandWithDefaults = {
   },
 }
 
-engine.register('callbackCommand@0.1.0', callbackCommand);
-engine.register('promiseCommand@0.1.0', promiseCommand);
-engine.register('validateCommand@0.1.0', validateCommand);
-engine.register('validateCommandWithDefaults@0.1.0', validateCommandWithDefaults);
+describe( 'Test compiling invidual units', () => {
+  test('With a callback command',  () => {
+    const fn = engine.compileOne(callbackCommand);
+    fn({ a: 1, b: 2}, (err, result) => {
+      expect(result).toEqual({ a: 1, b: 2});
+    });
+  });
 
-describe('Validate', () => {
-  test('validate', () => {
-    engine.run('validateCommand', {
-      a: '1',
-    }, (err, result) => {
+  test('With a promise', () => {
+    const fn = engine.compileOne(promiseCommand);
+    fn({ a: 1, b: 2}, (err, result) => {
+      expect(result).toEqual({ a: 1, b: 2});
+    });
+  });
+
+  test('With a value', () => {
+    const fn = engine.compileOne(valueCommand);
+    fn({ a: 1, b: 2}, (err, result) => {
+      expect(result).toEqual({ a: 1, b: 2});
+    });
+  });
+
+  test('Callback with validation', () => {
+    const fn = engine.compileOne(validateCommand);
+    fn({ a: '1' }, (err, result) => {
+      expect(err).toBeNull();
       expect(result).toBe('1');
     });
   });
 
-  test('validate error', () => {
-    engine.run('validateCommand', {
-      a: 1,
-    }, (err, result) => {
+  test('Callback with validation error', () => {
+    const fn = engine.compileOne(validateCommand);
+    fn({ a: 1 }, (err, result) => {
       expect(err).not.toBeNull();
     });
   });
 
-  test('validate with a default value', () => {
-    engine.run('validateCommandWithDefaults', {
-    }, (err, result) => {
+  test('Validate with a default value', () => {
+    const fn = engine.compileOne(validateCommandWithDefaults);
+    fn({}, (err, result) => {
       expect(err).toBeNull();
       expect(result).toBe('the_default_value');
     });
   });
-})
 
-describe('Using a callback', () => {
-  test('With a callback command', () => {
-    engine.run('callbackCommand', {}, (err, result) => {
-      expect(result).toBe(true);
-    });
-  });
-  test('With a promise command', () => {
-    engine.run('promiseCommand', {}, (err, result) => {
-      expect(result).toBe(true);
+  test('Validate with an overlapping of default value', () => {
+    const fn = engine.compileOne(validateCommandWithDefaults);
+    fn({a: 'overwriting_default'}, (err, result) => {
+      expect(err).toBeNull();
+      expect(result).not.toBe('the_default_value');
+      expect(result).toBe('overwriting_default');
     });
   });
 });
 
-describe('Using a promise', () => {
-  test('With a callback command', () => {
-    engine.run('callbackCommand', {}).then((result) => {
-      expect(result).toBe(true);
-    });
-  });
-  test('With a promise command', () => {
-    engine.run('promiseCommand', {}).then((result) => {
-      expect(result).toBe(true);
+const callbackCommand1 = {
+  command: (input, cb) => {
+    cb(null, { a: input.a+1 });
+  },
+};
+
+const callbackCommand2 = {
+  command: (input, cb) => {
+    cb(null, { a: input.a+10 });
+  },
+};
+
+const callbackCommand3 = {
+  register: {
+    command2: callbackCommand2,
+  },
+  command: [
+    'command2',
+  ],
+};
+
+const callbackCommand4 = {
+  register: {
+    command3: callbackCommand3,
+  },
+  command: [
+    'command3',
+  ],
+};
+
+const callbackCommand5 = {
+  register: {
+    command1: callbackCommand1,
+    command4: callbackCommand4,
+  },
+  command: [
+    'command1',
+    'command4',
+  ],
+};
+
+describe( 'Test compiling units', () => {
+  test('Basic',  () => {
+    const fn = engine.compile([
+      callbackCommand1,
+      callbackCommand5,
+    ]);
+    fn({a:0}, (err, result) => {
+      // expect(err).tobeNull();
+      expect(result).toEqual({ a: 12, });
     });
   });
 });

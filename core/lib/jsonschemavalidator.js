@@ -2,21 +2,25 @@ const _ = require('lodash');
 const Ajv = require('ajv');
 
 class JSONSchemaValidator {
-  constructor(config) {
-    config = _.defaults(config, {
+  constructor(options) {
+    options = _.defaults(options, {
       useDefaults: true,
     });
-    this.ajv = new Ajv({
-      useDefaults: config.useDefaults, 
-    });
+    this.ajv = new Ajv(options);
   }
 
-  compile(schema) {
-    return this.ajv.compile(schema);
-  }
-  
-  errorsText() {
-    return this.ajv.errorsText();
+  compile( schema ) {
+    const validate = this.ajv.compile(schema);
+
+    return (data, useDefaults) => {
+      const dataCopy = JSON.parse(JSON.stringify(data));
+      const isValid = validate(dataCopy);
+      return {
+        isValid,
+        data: useDefaults ? dataCopy: data,
+        errors: validate.errors,
+      };  
+    }
   }
 }
 
