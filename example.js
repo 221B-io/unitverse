@@ -72,5 +72,6 @@ fn({a:0}, (err, result) => {
         { unit: 'bcrypt/compare', input: { comparison: 'PASSWORD'}, options: { previous: 'hash' },},
       ],
     },
+    
   },
 }

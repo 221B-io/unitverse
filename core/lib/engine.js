@@ -14,6 +14,7 @@ class Engine {
       useDefaults: true,
       compileValidationOnRegistration: false,
       log: false,
+      arrayProcessor: '@unitverse/collections/waterfall',
     });
 
     this.validators = new VersionedObject();
