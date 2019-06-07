@@ -57,3 +57,20 @@ fn({a:0}, (err, result) => {
   callbackCommand5,
   callbackCommand5,
 ]
+
+{
+  register: {
+    'knex/init': require('./setupKnex'),
+    getPasswordForUser: require('./getUserFromPassword'),
+  },
+  command: {
+    unit: '@unitverse/collection/waterfall',
+    input: {
+      collection: [
+        { unit: 'knex/init', input: {}, options: { runOnce: true,  },},
+        { unit: 'getPasswordForUser', input: { username: 'USERNAME'}, options: { previous: 'knex', },},
+        { unit: 'bcrypt/compare', input: { comparison: 'PASSWORD'}, options: { previous: 'hash' },},
+      ],
+    },
+  },
+}
