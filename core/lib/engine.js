@@ -20,7 +20,9 @@ class Engine {
     this.validators.setVersion(
       'jsonSchema', 
       '0.1.0', 
-      new JSONSchemaValidator(_.pick(this.config, ['useDefaults']))
+      new JSONSchemaValidator(
+        _.pick(this.config, ['useDefaults'])
+      )
     );
 
     this.registry = {};
@@ -112,6 +114,15 @@ class Engine {
     };
   }
 
+  compileArray(compiledArray) {
+    return (input, callback) => {
+      compiledArray.unshift((cb) => {
+        cb(null, input);
+      });
+      return async.waterfall(compiledArray, callback);
+    };
+  }
+
   compile( units, registry ) {
     if(_.isPlainObject(units) && _.has(units, 'command')) {
       if(_.isFunction(units.command)) {
@@ -121,7 +132,11 @@ class Engine {
       const registry = {};
       if( _.has(units, 'register')) {
         _.forEach(units.register, (value, key) => {
-          registry[key] = this.compile(value);
+          if(_.isString(value)) {
+            registry[key] = require(value);
+          } else {
+            registry[key] = this.compile(value);
+          }
         });
       }
       if(_.isString(units.command) ){
@@ -141,13 +156,7 @@ class Engine {
       if( compiledArray.length === 1) {
         return compiledArray[0];
       }
-
-      return (input, callback) => {
-        compiledArray.unshift((cb) => {
-          cb(null, input);
-        });
-        return async.waterfall(compiledArray, callback);
-      };
+      return this.compileArray(compiledArray);
     }
     
     if ( _.isString(units) ) {

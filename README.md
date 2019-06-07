@@ -1,6 +1,67 @@
 # Unitverse
 
-## Not on NPM yet, however...
+## Getting Started
+```
+const uv = require('unitverse');
+const engine = new uv.Engine();
+
+const unit = {
+  register: {
+    hash: require('@unitverse/crypto/hash'));
+  },
+  command: [
+    'hash',
+  ])
+};
+
+const fn = engine.compile(unit);
+fn('readme.txt', (err, result) => console.log(result))
+```
+
+## Units
+
+Units are objects with the following keys: 
+- dependencies (optional)
+- command (required) 
+- name (optional)
+- version (optional)
+- description (optional)
+- jsonSchema (optional)
+
+### Dependencies
+
+Unit dependencies map strings that can be used as part of a command to JavaScript packages that can be required in typical JavaScript fashion (e.g., ```npm install```, ```yarn add```).
+
+### Command
+
+Command can take the following forms:
+
+- A string referring to a registered dependency
+- A Unit object
+- A JavaScript function with one argument and an option callback. The function should return a value syncronously, return a Promise, or call the callback.
+- A 
+
+- An array of any of the above items (includings arrays of arrays of items)
+
+Compilnig the unit of any of the above forms will generate a single function of the form:
+
+```
+(input, callback) => {
+  ...
+}
+```
+
+When a unit's command contains an array of other units, input "waterfalls" through the array (or arrys of arrys) by default.
+
+Input to ```engine.compile``` can take the same form 
+
+- engine
+- runOptions
+- cache
+
+## 
+
+## Internal docs...
 ```
 npm -g lerna
 git clone https://github.com/221B-io/unitverse
@@ -17,51 +78,4 @@ Copy and paste some of the code below into index.js and run
 
 ```
 node index.js
-```
-
-## Getting Started
-```
-const Engine = require('unitverse');
-const engine = new Engine();
-
-engine.register('queue@0.1.0', require('@unitverse/collections/queue'));
-engine.register('hash@0.1.0', require('@unitverse/crypto/hash'));
-
-engine.run('queue', {
-  tasks: [{
-    'hash': {
-      path: 'touch.txt',
-      function: 'md5',
-    },
-  },],
-  log: false,
-}).then((result) => {
-  console.log('result', result);
-}).catch((error) => {
-  console.log(error);
-});
-```
-
-## The `run` function
-
-The run function can take a callback or return a promise, depending on whether or not callback is a function. For example, using the callback notation:
-
-```
-engine.run('hash', {
-  path: 'touch.txt',
-  function: 'md5',
-}, (err, result,) => {
-  console.log('result', result);
-})
-```
-
-and Promise notation:
-
-```
-engine.run('hash', {
-  path: 'touch.txt',
-  function: 'md5',
-}).then((result) => {
-  console.log('promise', result);
-});
 ```
