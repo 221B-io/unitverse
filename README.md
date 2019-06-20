@@ -23,6 +23,8 @@ fn('readme.txt', (err, result) => console.log(result))
 Units are objects with the following keys: 
 - dependencies (optional)
 - command (required) 
+- input (optional)
+- options (optional)
 - name (optional)
 - version (optional)
 - description (optional)

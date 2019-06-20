@@ -2,7 +2,8 @@ const _ = require('lodash');
 const npa = require('npm-package-arg');
 const pino = require('pino');
 const pIsPromise = require('p-is-promise');
-const async = require('async');
+
+const waterfall = require('../../units/collections/waterfall');
 
 const VersionedObject = require('./versionedobject');
 const JSONSchemaValidator = require('./jsonschemavalidator');
@@ -12,9 +13,11 @@ class Engine {
     this.config = _.defaults(config, {
       validateInput: true,
       useDefaults: true,
-      compileValidationOnRegistration: false,
+      // compileValidationOnRegistration: false,
       log: false,
-      arrayProcessor: '@unitverse/collections/waterfall',
+      arrayProcessor: waterfall,
+      injectDependenciesAs: null,
+      injectEngineAs: null,
     });
 
     this.validators = new VersionedObject();
@@ -25,8 +28,6 @@ class Engine {
         _.pick(this.config, ['useDefaults'])
       )
     );
-
-    this.registry = {};
 
     this.logger = pino({ prettyPrint: { colorize: true } });
   }
@@ -55,13 +56,13 @@ class Engine {
 
     const composedCallback = (err, result) => {
       callbackWasRun = true;
-      if ( !err ) {
-        this.log({
-          type: command.type,
-          input: input,
-          output: result,
-        });
-      }
+      // if ( !err ) {
+      //   this.log({
+      //     type: command.type,
+      //     input: input,
+      //     output: result,
+      //   });
+      // }
       callback(err, result);
     }
 
@@ -81,90 +82,62 @@ class Engine {
     return;
   }
 
-  compileOne(unit) {
-    let command = null;
-    let inputValidationFunction = undefined;
-    
-    if(_.isPlainObject(unit)) {
-      command = unit.command;
-      if( unit.jsonSchema !== undefined) {
-        const validator = this.validators.getLatest('jsonSchema');
-        inputValidationFunction = validator.compile( unit.jsonSchema );
+  run( value, input, dependencies, cb) {
+    if(_.isPlainObject(value)) {
+      input = _.defaults(value.input, input);
+      const injectEngineAs = _.get(value, 'options.injectEngineAs');
+      if(injectEngineAs){
+        input[injectEngineAs] = this;
       }
-    } else if (_.isFunction(unit) ){
-      command = unit;
-    } else {
-      throw Error(`Unit is not of proper form`);
-    }
-
-    return (input, cb) => {
-      // const options = _.defaults(options, this.config);
-      const options = this.config;
-      if( options.validateInput 
-          && inputValidationFunction !== undefined ) {
-        const validationObject =  inputValidationFunction ( input, options.useDefaults );
-        if ( !validationObject.isValid ) {
-          return cb(validationObject.errors, null);
-        }
-        if( this.config.useDefaults === true) {
-          input = validationObject.data;
-        }
-      }
-      // return the callback version of the command
-      this.callbackify(command, input, cb);
-    };
-  }
-
-  compileArray(compiledArray) {
-    return (input, callback) => {
-      compiledArray.unshift((cb) => {
-        cb(null, input);
-      });
-      return async.waterfall(compiledArray, callback);
-    };
-  }
-
-  compile( units, registry ) {
-    if(_.isPlainObject(units) && _.has(units, 'command')) {
-      if(_.isFunction(units.command)) {
-        return this.compileOne(units.command);
+      const injectDependenciesAs = _.get(value, 'options.injectDependenciesAs');
+      if(injectDependenciesAs) {
+        input[injectDependenciesAs] = dependencies;
       }
 
-      const registry = {};
-      if( _.has(units, 'register')) {
-        _.forEach(units.register, (value, key) => {
-          if(_.isString(value)) {
-            registry[key] = require(value);
-          } else {
-            registry[key] = this.compile(value);
-          }
-        });
+      if(_.isString(value.command)) {
+        return this.run(
+          value.dependencies[value.command],
+          input,
+          value.dependencies, // forward dependencies through
+          cb
+        );
       }
-      if(_.isString(units.command) ){
-        return this.compile(units.command, registry);
-      }
-      if(_.isArray(units.command) ) {
-        return this.compile(units.command, registry);
-      }
-      return;  
-    }
-
-    if ( _.isArray(units) ) {
-      const compiledArray = _.map(units, (unit) => {
-        return this.compile(unit, registry);
-      });
       
-      if( compiledArray.length === 1) {
-        return compiledArray[0];
+      if(_.isFunction(value.command)) {
+        return this.run(value.command, input, null, cb);
       }
-      return this.compileArray(compiledArray);
-    }
-    
-    if ( _.isString(units) ) {
-      return registry[units];
+
+      if(_.isPlainObject(value.command)) {
+        return this.run(value.command, input, value.dependencies, cb);
+      }
+      
+      if(_.isArray(value.command)) {
+        value.input = {
+          units: value.command,
+        };
+        value.command = _.get(value, 'options.arrayProcessor') || this.config.arrayProcessor;
+        return this.run(value, input, value.dependencies, cb);
+      }
     }
 
-    return;
+    if(_.isString(value)) {
+      return this.run(
+        dependencies[value],
+        input,
+        null,
+        cb
+      )
+    }
+
+    if(_.isFunction(value)) {
+      this.callbackify(value, input, cb);
+    }
+  }
+
+  compile(value, dependencies) {
+    return (input, cb) => {
+      this.run(value, input, dependencies, cb);
+    };
   }
 }
 
