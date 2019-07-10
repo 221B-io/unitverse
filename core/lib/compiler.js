@@ -21,6 +21,7 @@ compileUnit(unit, registry) {
     if( options.validateInput 
         && inputValidationFunction !== undefined ) {
       const validationObject =  inputValidationFunction ( input, options.useDefaults );
+      if ( !validationObject.isValid ) {
         return cb(validationObject.errors, null);
       }
       if( this.config.useDefaults === true) {
