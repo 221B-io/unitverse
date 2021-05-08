@@ -27,6 +27,6 @@
     "url": "https://github.com/221B-io/unitverse/issues"
   },
   "dependencies": {
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.21"
   }
 }
