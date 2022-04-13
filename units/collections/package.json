@@ -20,7 +20,7 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "async": "^2.6.1",
+    "async": "^3.2.2",
     "lodash": "^4.17.11"
   }
 }
